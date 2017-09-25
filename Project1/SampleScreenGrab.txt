@@ -1,0 +1,28 @@
+Read in Test data and store as a list of dictionaries
+ OK  Got:  <class 'list'> Expected:  <class 'list'>
+
+First student sorted by First name:
+ OK  Got:  Abbot Le Expected:  Abbot Le
+ OK  Got:  Adam Rocha Expected:  Adam Rocha
+First student sorted by Last name:
+ OK  Got:  Elijah Adams Expected:  Elijah Adams
+ OK  Got:  Elijah Adams Expected:  Elijah Adams
+First student sorted by Email:
+ OK  Got:  Hope Craft Expected:  Hope Craft
+ OK  Got:  Orli Humphrey Expected:  Orli Humphrey
+
+Each grade ordered by size:
+ OK  Got:  [('Junior', 28), ('Senior', 27), ('Freshman', 23), ('Sophomore', 22)] Expected:  [('Junior', 28), ('Senior', 27), ('Freshman', 23), ('Sophomore', 22)]
+ OK  Got:  [('Senior', 26), ('Junior', 25), ('Freshman', 21), ('Sophomore', 18)] Expected:  [('Senior', 26), ('Junior', 25), ('Freshman', 21), ('Sophomore', 18)]
+
+The most common day of the year to be born is:
+ OK  Got:  13 Expected:  13
+ OK  Got:  26 Expected:  26
+
+The average age is:
+ OK  Got:  39 Expected:  39
+ OK  Got:  41 Expected:  41
+
+Successful sort and print to file:
+ OK  Got:  True Expected:  True
+Your final score is:  200
