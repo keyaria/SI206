@@ -61,18 +61,7 @@ def classSizes(data):
 	#Your code here:
 	from collections import Counter
 	
-	#tup = Counter(Class[] for data['Class'], i in data)
-	
-	#counts = dict()
 
-	#for i in data:
-	#	counts[i] = counts.get(i, 0) + 1
-#	tup = defaultdict(list)
-#	for i in data.items():
-#		for k,j in i.items():
-#			tup[k].append(int(j))
-
-	#out_tup = {k:sum(j) for k,j in tup.items()}
 
 	tup = Counter()			#Initialize my Counter
 	#Add things to it
