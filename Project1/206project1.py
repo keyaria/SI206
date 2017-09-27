@@ -118,7 +118,7 @@ def findAge(a):
 	today = date.today()
 	age = list()
 	add = 0
-	#Your code here:
+	
 	for i in a:
 		dob = i['DOB']
 		spil = dob.split('/')
