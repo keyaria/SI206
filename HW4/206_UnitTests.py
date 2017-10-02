@@ -140,27 +140,67 @@ class Test(unittest.TestCase):
 
 	def test_rank(self):
 	
-		c = Card(rank=12)
+		c = Card(rank = 12)
 		self.assertEqual(c.rank, "Queen")
 
-		c = Card(0,1)
-		self.assertEqual(card.rank, "Ace")
+	def test_rank2(self):
+		c = Card(rank = 1)
+		self.assertEqual(c.rank, "Ace")
 
-		c = Card(0,3)
-		self.assertEqual(card.rank, 3)
+	def test_rank3(self):
+		c = Card(rank = 3)
+		self.assertEqual(c.rank, 3)
 
 	def test_suit(self):
+		c = Card(suit=1)
+		self.assertEqual(c.suit,"Clubs")
 
-		card = Card(1, 4)
-		self.assertEqual(card.suit, "Clubs")
+	def test_suit1(self):
+		c = Card(suit=2)
+		self.assertEqual(c.suit,"Hearts")
 
-		card = Card(2, 4)
-		self.assertEqual(card.suit, "Hearts")
+	def test_Inst(self):
+		c = Card()
+		self.assertEqual(c.suit_names,["Diamonds","Clubs","Hearts","Spades"])
 
-	def test_suit_names(self):
+	def test_Inst2(self):
+		c = Card(suit=2, rank = 7)
+		self.assertEqual(str(c),"7 of Hearts")
 
-		card= Card(1,5)
+	def test_deckInst(self):
+		d = Deck()
+		self.assertEqual(len(d.cards),52)
 
+	def test_popInst(self):
+		d = Deck()
+		c = Card()
+		self.assertEqual(type(d.pop_card()),type(c))
+
+	def test_warInst(self):
+		p = play_war_game()
+		self.assertEqual(len(p),3)
+		self.assertEqual(type(p[0]), str)
+
+	#testing that the deck is sorted and suit is Spades
+	def test_sort(self):
+		
+		c = Card(suit=3, rank = 13)
+		ci = Card(suit=2, rank = 9)
+		d = Deck()
+		d.sort_cards()
+		p = d.pop_card()
+
+		self.assertEqual(p.suit,c.suit)
+
+	#testing that the deck is sorted and rank is king
+	def test_sort2(self):
+		c = Card(suit=3, rank = 13)
+		ci = Card(suit=2, rank = 9)
+		d = Deck()
+		d.sort_cards()
+		p = d.pop_card()
+
+		self.assertEqual(p.rank,c.rank)
 #############
 ## The following is a line to run all of the tests you include:
 unittest.main(verbosity=2) 
