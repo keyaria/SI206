@@ -5,7 +5,7 @@ def reg(file):
 	fh= open(file, "r")
 	for line in fh:
 		line = line.rstrip()
-		#print(line)
+		
 		stuff = re.findall('[0-9]+', line)
 		
 		if stuff != [] : 
@@ -16,7 +16,6 @@ def reg(file):
 	for a in lst:
 		sum_lst += int(a)
 	return (sum_lst)
-
 
 
 
