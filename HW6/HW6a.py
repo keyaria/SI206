@@ -17,7 +17,7 @@ sum_lst = 0
 soup = BeautifulSoup(html, "html.parser")
 
 # Retrieve all of the anchor tags
-tags = soup('span')
+
 for tag in tags:
     # Look at the parts of a tag
    # print('TAG:', tag)
@@ -29,6 +29,7 @@ for tag in tags:
 	sum_lst += int(tag.contents[0])
 
 
+	
 
 	
 
