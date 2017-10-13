@@ -50,22 +50,46 @@ def grab_headlines():
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    url = input('Enter - ')
+    url = "file:///Users/keyariaw/Desktop/SI206/Project2/opinion.html"
     html = urllib.request.urlopen(url, context=ctx).read()
     soup = BeautifulSoup(html, 'html.parser')
 
-    
-    for i in soup.find_all(class_="asidebar"):
+    finallist = []
+    #Create soup with just the most read read content of the page
+    bigc = soup.find(class_="asidebar")
+    #Now find all the links to that part
+    lt = bigc.find_all("li")
+    #Go through and add the list text to a list 
+    for l in lt:
+       # print(l.text)
+        finallist.append(l.text)
 
-        print('here')
+
+   # print(finallist)
+    return finallist
+
+
+   # for i in soup.find_all(class_="asidebar"):
+
+       # lt = soup.find_all(class_="asidebar")
+       # for l in lt:
+       #     print(l.li.a)
+       # print('here')
+       # html = urllib.request.urlopen(url, context=ctx).read()
+       # print(soup.li)
         
-        #print(i.a.text)
+      #  print(i)
 
-        print('break\n')
+        
+        #tag = soup.find_all(class_="asidebar").li
+
+        #print(tag)
+
+     #   print('break\n')
         #lnk = soup.find_all(class_="item-list")
         #print(lnk)
-        tag = soup(class_='asidebar')
-        print(tag[0].get('li', None))
+       # tag = soup(class_='item-list')
+       # print(tag)
         #print(tag)
 
        # print (tag[i].get('href', None))
