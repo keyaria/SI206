@@ -110,8 +110,67 @@ def grab_headlines():
 ## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'}) 
 
 def get_umsi_data():
-    pass
-    #Your code here
+
+
+    import urllib.request, urllib.parse, urllib.error
+    from bs4 import BeautifulSoup
+    import ssl
+    # Ignore SSL certificate errors
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    umsi_titles = {}
+
+    url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
+    count = 12
+
+    mydict = {}
+    for ur in range(count):
+        html = requests.get(url, headers={'User-Agent': 'SI_CLASS'})
+        #print(html.content)
+        soup = BeautifulSoup(html.content, 'html.parser')
+        tags = soup('a')
+        url =
+    #name = soup.find(property="dc:title")
+    #for name in soup.find_all(property="dc:title"):
+    #    for title in soup.find_all(class_="field field-name-field-person-titles field-type-text field-label-hidden"):
+    #        mydict[name.get_text()] = title.get_text()
+
+       # print(name[i].text)
+   # title = soup.find(class_="field field-name-field-person-titles field-type-text field-label-hidden")
+        #print(title[i].text)
+       # mydict = {name[i].text : title[i].text}
+    
+        #tup[name[i].text] = title[i].text
+    print (mydict)
+
+       # name = soup.find_all(property="dc:title")
+        #for tag in name:
+        #    tags = tag.get_text()
+            
+           # print(tags)
+
+       # for title in soup.find_all(class_="field-items"):
+
+
+          #  print(title.h2.text)
+           
+            
+           # for titles in title.find_all(property="dc:title"):
+           #     print (titles.get_text())
+
+
+
+
+           # print(titles)
+
+        #content = soup.find_all(property="dc:title")
+            
+            
+            
+
+
+    #Yocur code here
 
 ## PART 3 (b) Define a function called num_students.  
 ## INPUT: The dictionary from get_umsi_data().
