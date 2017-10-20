@@ -52,7 +52,7 @@ def grab_headlines():
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    url = "file:///Users/keyariaw/Desktop/SI206/Project2/opinion.html"
+    url = "https://www.michigandaily.com/"
     html = urllib.request.urlopen(url, context=ctx).read()
     soup = BeautifulSoup(html, 'html.parser')
 
