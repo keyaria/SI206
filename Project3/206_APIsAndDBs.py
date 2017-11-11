@@ -61,28 +61,90 @@ except:
 
 
 
-# Define your function get_user_tweets here:
-def get_user_tweets():
+# # Define your function get_user_tweets here:
+# def get_user_tweets():
 
-	if '@umich' in CACHE_DICTION:
-		print('using cached data')
-		twitter_results = CACHE_DICTION['@umich']
-	else:
-		print('getting data from internet')
-		#Have to get 20 ???
-		twitter_results = api.user_timeline('@umich')
+# 	if '@umich' in CACHE_DICTION:
+# 		print('using cached data')
+# 		twitter_results = CACHE_DICTION['@umich']
+# 	else:
+# 		print('getting data from internet')
+# 		#Have to get 20 ???
+# 		twitter_results = api.user_timeline('@umich')
 
-		CACHE_DICTION['@umich'] = twitter_results
+# 		CACHE_DICTION['@umich'] = twitter_results
 
-		f = open(CACHE_FNAME, "w")
-		f.write(json.dumps(CACHE_DICTION))
-		f.close()
+# 		f = open(CACHE_FNAME, "w")
+# 		f.write(json.dumps(CACHE_DICTION))
+# 		f.close()
 
-	return twitter_results
+# 	return twitter_results
 
+conn = sqlite3.connect('206_APIsAndDBs.sqlite')
+cur = conn.cursor()
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('DROP TABLE IF EXISTS Users')
+#use datetime
+
+cur.execute('CREATE TABLE USERS (user_id INTEGER NOT NULL PRIMARY KEY UNIQUE, screen_name TEXT, num_favs INTEGER, description TEXT)')
+cur.execute('CREATE TABLE Tweets (tweet_id INTEGER NOT NULL PRIMARY KEY UNIQUE, tweet_text TEXT,user_posted INTEGER , time_posted TIMESTAMP, retweets NUMBER, FOREIGN KEY (user_posted) REFERENCES Users(user_id))')
+
+def insert_tweets(umich_tweets):
+	cur = conn.cursor()
+
+	#print("In insert tweets with ", len(umich_tweets))
+	for tw in umich_tweets:
+
+   # print(tw["entities"]["user_mentions"]["id"])
+    #print(tw["user_mentions"]["id"])
+		# print("Mentioned tweets are: ", len(tw["entities"]["user_mentions"]))
+		# print("Trying to insert someone", tw["user"])
+		tup2 = tw["user"]["id"],tw["user"]["screen_name"], tw["user"]["favourites_count"], tw["user"]["description"]
+		#print("Created ",tw["user"]["screen_name"])
+
+		#Do a select from users.  If it exists, don't do anything.  If it doesn't exist then do the insert
+		#statement below
+		tup5 = tw["user"]["screen_name"]
+		cur.execute('SELECT * FROM Users where screen_name = ?', (tup5,))
+		conn.commit()
+		#print("made it here")
+		try:
+		#	print('Made it here')
+			acct = cur.fetchone()[0]
+		except:
+		#	print('No unretrieved Twitter accounts found')
+			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup2)
+		conn.commit()
+
+	
+
+		for mention in tw["entities"]["user_mentions"]:
+		# 	print("Entering loop")
+		 	id_new = mention["id"]
+		 	user_results = api.get_user(id_new)
+  #   	#res = us["favorite_count"]
+		 	tup3 = user_results["id"],user_results["screen_name"], user_results["favourites_count"], user_results["description"]
+		 	tup6 = user_results["screen_name"]
+		 	cur.execute('SELECT * FROM Users where screen_name = ?', (tup6,))
+		 	conn.commit()
+
+		 	try:
+		 		acct = cur.fetchone()[0]
+		 		#print("Trying to insert ", user_results["screen_name"])
+		 		#cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
+		 	except:
+		 		print("User Exists")
+		 		cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
+		 	conn.commit()
+    	#cur.execute('INSERT INTO Tweets(user_posted) VALUES (?)', tup3)
+   # print(user_results)
+		tup = tw["id"],tw["text"], tw["user"]["id"], tw["created_at"], tw["retweet_count"]
+		cur.execute('INSERT INTO Tweets (tweet_id, tweet_text,user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
+		# print("inserted ", tw["text"])
+	conn.commit()
 
 def get_user_tweets(user):
-
+	#print("in get_user_tweets with ", user)
 	if user in CACHE_DICTION:
 		print('using cached data')
 		twitter_results = CACHE_DICTION[user]
@@ -97,6 +159,8 @@ def get_user_tweets(user):
 		f.write(json.dumps(CACHE_DICTION))
 		f.close()
 
+
+	insert_tweets(twitter_results)
 	return twitter_results
 
 
@@ -116,14 +180,7 @@ umich_tweets = get_user_tweets("@umich")
 # mentioned in the umich timeline, that Twitter user's info should be 
 # in the Users table, etc.
 
-conn = sqlite3.connect('206_APIsAndDBs.sqlite')
-cur = conn.cursor()
-cur.execute('DROP TABLE IF EXISTS Tweets')
-cur.execute('DROP TABLE IF EXISTS Users')
-#use datetime
 
-cur.execute('CREATE TABLE USERS (user_id INTEGER PRIMARY KEY UNIQUE, screen_name TEXT, num_favs INTEGER, description TEXT)')
-cur.execute('CREATE TABLE Tweets (tweet_id INTEGER PRIMARY KEY UNIQUE, tweet_text TEXT, user_posted INTEGER, time_posted TIMESTAMP, retweets NUMBER)')
 ## You should load into the Tweets table: 
 # Info about all the tweets (at least 20) that you gather from the 
 # umich timeline.
@@ -131,25 +188,8 @@ cur.execute('CREATE TABLE Tweets (tweet_id INTEGER PRIMARY KEY UNIQUE, tweet_tex
 # the user_id column! See below hints.
 #print(umich_tweets)
 #Use a for loop, the cursor you defined above to execute INSERT statements, that insert the data from each of the tweets in umsi_tweets into the correct columns in each row of the Tweets database table.
-for tw in umich_tweets:
-    tup = tw["id"],tw["text"],tw["user"]["id"], tw["created_at"], tw["retweet_count"]
-    cur.execute('INSERT INTO Tweets (tweet_id, tweet_text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
-   # print(tw["entities"]["user_mentions"]["id"])
-    #print(tw["user_mentions"]["id"])
-    for mention in tw["entities"]["user_mentions"]:
-    	id_new = mention["id"]
-    	user_results = api.get_user(id_new)
-    	#res = us["favorite_count"]
-    	tup2 = user_results["id"],user_results["screen_name"], user_results["favourites_count"], user_results["description"]
-    	#print(tup2)
-    	try:
-    		cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup2)
-    	except:
-    		print("User Exists")
-    
-   # print(user_results)
-    
 
+    #cur.execute('INSERT INTO Tweets (user_posted) VALUES ()')
     #print(user_results["favourites_count"])
     #res = us["favorite_count"]
     #tup2 = user_results["id"],user_results["screen_name"], user_results["favourites_count"], user_results["description"]
@@ -212,7 +252,7 @@ favorites = lis2
 # elements in each tuple: the user screenname and the text of the 
 # tweet. Save the resulting list of tuples in a variable called joined_data2.
 cur.execute('SELECT screen_name, tweet_text FROM Tweets INNER JOIN Users ON Tweets.user_posted = Users.user_id')
-print(cur.fetchall())
+#print(cur.fetchall())
 joined_data = cur.fetchall()
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
@@ -226,7 +266,7 @@ joined_data2 = cur.fetchall()
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
 ### OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, 
 ### but it's a pain). ###
-conn.commit()
+
 cur.close()
 ###### TESTS APPEAR BELOW THIS LINE ######
 ###### Note that the tests are necessary to pass, but not sufficient -- 
