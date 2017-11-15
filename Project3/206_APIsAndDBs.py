@@ -112,36 +112,39 @@ def insert_tweets(umich_tweets):
 		#	print('Made it here')
 			acct = cur.fetchone()[0]
 		except:
-		#	print('No unretrieved Twitter accounts found')
+			print('No unretrieved Twitter accounts found')
 			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup2)
-		conn.commit()
+			#conn.commit()
 
 	
-
-		for mention in tw["entities"]["user_mentions"]:
+		if(tw["entities"]["user_mentions"] != 0):
+			for mention in tw["entities"]["user_mentions"]:
 		# 	print("Entering loop")
-		 	id_new = mention["id"]
-		 	user_results = api.get_user(id_new)
+		 		id_new = mention["id"]
+		 		user_results = api.get_user(id_new)
   #   	#res = us["favorite_count"]
-		 	tup3 = user_results["id"],user_results["screen_name"], user_results["favourites_count"], user_results["description"]
-		 	tup6 = user_results["screen_name"]
-		 	cur.execute('SELECT * FROM Users where screen_name = ?', (tup6,))
-		 	conn.commit()
+		 		tup3 = user_results["id"],user_results["screen_name"], user_results["favourites_count"], user_results["description"]
+		 		tup6 = user_results["screen_name"]
+		 		cur.execute('SELECT * FROM Users where screen_name = ?', (tup6,))
+		 		#conn.commit()
 
-		 	try:
-		 		acct = cur.fetchone()[0]
-		 		#print("Trying to insert ", user_results["screen_name"])
+		 		try:
+		 			acct = cur.fetchone()[0]
+		 			print("Trying to insert ", user_results["screen_name"])
+		 			#conn.commit()
 		 		#cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
-		 	except:
-		 		print("User Exists")
-		 		cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
-		 	conn.commit()
+		 		except:
+		 			print("User Exists")
+		 			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
+		 			#conn.commit()
+					#conn.commit()
     	#cur.execute('INSERT INTO Tweets(user_posted) VALUES (?)', tup3)
    # print(user_results)
 		tup = tw["id"],tw["text"], tw["user"]["id"], tw["created_at"], tw["retweet_count"]
 		cur.execute('INSERT INTO Tweets (tweet_id, tweet_text,user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
+		#conn.commit()
 		# print("inserted ", tw["text"])
-	conn.commit()
+	#conn.commit()
 
 def get_user_tweets(user):
 	#print("in get_user_tweets with ", user)
@@ -266,7 +269,7 @@ joined_data2 = cur.fetchall()
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
 ### OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, 
 ### but it's a pain). ###
-
+conn.commit()
 cur.close()
 ###### TESTS APPEAR BELOW THIS LINE ######
 ###### Note that the tests are necessary to pass, but not sufficient -- 
