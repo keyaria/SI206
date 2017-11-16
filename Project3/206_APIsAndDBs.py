@@ -112,7 +112,7 @@ def insert_tweets(umich_tweets):
 		#	print('Made it here')
 			acct = cur.fetchone()[0]
 		except:
-			print('No unretrieved Twitter accounts found')
+			#print('No unretrieved Twitter accounts found')
 			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup2)
 			#conn.commit()
 
@@ -130,11 +130,11 @@ def insert_tweets(umich_tweets):
 
 		 		try:
 		 			acct = cur.fetchone()[0]
-		 			print("Trying to insert ", user_results["screen_name"])
+		 			#print("Trying to insert ", user_results["screen_name"])
 		 			#conn.commit()
 		 		#cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
 		 		except:
-		 			print("User Exists")
+		 			#print("User Exists")
 		 			cur.execute('INSERT INTO Users (user_id, screen_name, num_favs, description) VALUES (?, ?, ?, ?)', tup3)
 		 			#conn.commit()
 					#conn.commit()
@@ -144,7 +144,7 @@ def insert_tweets(umich_tweets):
 		cur.execute('INSERT INTO Tweets (tweet_id, tweet_text,user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)', tup)
 		#conn.commit()
 		# print("inserted ", tw["text"])
-	#conn.commit()
+	#conn.close()
 
 def get_user_tweets(user):
 	#print("in get_user_tweets with ", user)
@@ -270,6 +270,7 @@ joined_data2 = cur.fetchall()
 ### OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, 
 ### but it's a pain). ###
 conn.commit()
+#conn.close()
 cur.close()
 ###### TESTS APPEAR BELOW THIS LINE ######
 ###### Note that the tests are necessary to pass, but not sufficient -- 
@@ -368,8 +369,11 @@ class Task3(unittest.TestCase):
 		self.assertEqual(type(favorites[0]),type(""),"Testing that at least one of the elements in the favorites list is a string, not a tuple or anything else")
 	def test_joined_result(self):
 		self.assertEqual(type(joined_data[0]),type(("hi","bye")),"Testing that an element in joined_result is a tuple")
-
-
+	#Was getting socket error
+	#conn.close()
 
 if __name__ == "__main__":
 	unittest.main(verbosity=2)
+	
+conn.commit()
+conn.close()
