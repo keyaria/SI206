@@ -1,0 +1,19 @@
+##SI 206 2017
+## Final Project
+## Keyaria Walker
+
+import unittest
+import itertools
+import collections
+import insta_info 
+import json
+import sqlite3
+
+consumer_key = twitter_info.consumer_key
+consumer_secret = twitter_info.consumer_secret
+access_token = twitter_info.access_token
+access_token_secret = twitter_info.access_token_secret
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+
+access_token=189197666.3e5b08b.88c1b4c86c4940a086d79eab5ebed29d
