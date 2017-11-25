@@ -18,3 +18,5 @@ def get_user_insta():
 	usr = api.user("pandakeyaria")
 	my_usr = usr[0]
 	print ('User id is', my_usr.id, 'and name is ', my_usr.username)
+
+#Need to add Facebook
