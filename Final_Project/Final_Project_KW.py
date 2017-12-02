@@ -8,8 +8,9 @@ import collections
 
 import json
 import sqlite3
+import facebook
 from instagram.client import InstagramAPI
-
+#insta
 def get_user_insta():
 	access_token = "189197666.3e5b08b.88c1b4c86c4940a086d79eab5ebed29d"
 
@@ -20,3 +21,13 @@ def get_user_insta():
 	print ('User id is', my_usr.id, 'and name is ', my_usr.username)
 
 #Need to add Facebook
+def get_user_fb():
+	access_token = None
+	if access_token is None:
+    	access_token = input("\nCopy and paste token from https://developers.facebook.com/tools/explorer\n>  ")
+
+#Github
+
+#some type of google api
+
+#Youtube
