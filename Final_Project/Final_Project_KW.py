@@ -221,11 +221,29 @@ def get_user_fb(user):
 		f.close()
 	insert_user_fb()
 	return fb_results
+def get_gmail():
+	request_url = "https://www.googleapis.com/gmail/v1/users/me/profile&key=ya29.GlseBdlphjF3BDFns897kg5Wbzz2umVpQGru-v7VjK_png07kIOKH4JDPvb64ZBIjyYSmEikZD4I2Z9DkY-8NLffmpE_KaXXfpLYsFiQsm7rzKL8SOMzd7qMLdrD"
+	print('GET request ue : %s' % (request_url))
+
+	access_token= "ya29.GlseBdlphjF3BDFns897kg5Wbzz2umVpQGru-v7VjK_png07kIOKH4JDPvb64ZBIjyYSmEikZD4I2Z9DkY-8NLffmpE_KaXXfpLYsFiQsm7rzKL8SOMzd7qMLdrD",
+	user_info = requests.get(request_url).json()
+
+	print(user_info)
+
+	#from oauth2client.client import OAuth2WebServerFlow
+
+	#flow = OAuth2WebServerFlow(client_id='60246787954-01thr1e518mr3l7upgse73798inf4439.apps.googleusercontent.com',
+	#						client_secret='MdZH07Gp4atU8OVrE3Jed13h',
+	##						scope='https://www.googleapis.com/auth/gmail',
+	#						redirect_uri='https://google.com')
+	#auth_uri = flow.step1_get_authorize_url()
+#service = build('gmail', 'v4', developerKey=ya29.GlseBdlphjF3BDFns897kg5Wbzz2umVpQGru-v7VjK_png07kIOKH4JDPvb64ZBIjyYSmEikZD4I2Z9DkY-8NLffmpE_KaXXfpLYsFiQsm7rzKL8SOMzd7qMLdrD)
 
 #def what(url,headers):
-get_user_insta()
-get_posts()
-faceb = get_user_fb("me")
+#get_user_insta()
+#get_posts()
+#faceb = get_user_fb("me")
+get_gmail()
 #insert_user_fb()
 #d = json.loads(open('my_posts.json'))
 conn.commit()
