@@ -15,7 +15,9 @@ import facebook
 
 import httplib2
 import os
-
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
@@ -32,6 +34,12 @@ except ImportError:
 #	access_token = input("\nCopy and paste token from https://developers.facebook.com/tools/explorer\n>  ")
 
 #Cache setup
+CLIENT_SECRETS_FILE = "client_secret.json"
+
+
+SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
+API_SERVICE_NAME = 'youtube'
+API_VERSION = 'v3'
 
 
 conn = sqlite3.connect('Final_Project.sqlite')
@@ -160,7 +168,7 @@ def get_posts():
 #Need to add Facebook
 
 def insert_user_fb():
-	access_token = "EAACEdEose0cBAHDKeGICZCykJZCyxthrJCqLKsI0VpEL7pCI0RZBr9hzuwWqZC6FBIPgsQZCEoEnkZC3hDQC6Qdb7nbML0rmZBGq7ZAgWaZCZBoCz24plN42XrxgaZATSfxESUKIGi4OXlBijm6I0dZAzuCrbdMjsd2gAo26ePqIO4KeJ5paIZCgaZA1wKaCJQ2jPw6FDy4InFPKadOAZDZD"
+	access_token = "EAACEdEose0cBACL4RZBgLVr277vZBz4mbPL7pC2EfWN6JrKAYdtSdfYD4qhTl07s9ITAa4gY6rQ6sItou6H4z6Cv9pltMYhlQIIblBFpuZBRsC5CalJwUvZCZCUewE5gBBewIk1iDtCyeuvPTGI8k5gfM3XV0btbXbNPqoX1ZCyZAb6sRE6STwsW5hfVb8eSNZCtvHPFXfRpyQZDZD"
 
 	cur = conn.cursor()
 
@@ -236,7 +244,7 @@ def get_user_fb():
 	except:
 		CACHE_DICTION = {}
 
-	access_token = "EAACEdEose0cBAHDKeGICZCykJZCyxthrJCqLKsI0VpEL7pCI0RZBr9hzuwWqZC6FBIPgsQZCEoEnkZC3hDQC6Qdb7nbML0rmZBGq7ZAgWaZCZBoCz24plN42XrxgaZATSfxESUKIGi4OXlBijm6I0dZAzuCrbdMjsd2gAo26ePqIO4KeJ5paIZCgaZA1wKaCJQ2jPw6FDy4InFPKadOAZDZD"
+	access_token = "EAACEdEose0cBACL4RZBgLVr277vZBz4mbPL7pC2EfWN6JrKAYdtSdfYD4qhTl07s9ITAa4gY6rQ6sItou6H4z6Cv9pltMYhlQIIblBFpuZBRsC5CalJwUvZCZCUewE5gBBewIk1iDtCyeuvPTGI8k5gfM3XV0btbXbNPqoX1ZCyZAb6sRE6STwsW5hfVb8eSNZCtvHPFXfRpyQZDZD"
 	if access_token is None:
 		access_token = input("\nCopy and paste token from https://developers.facebook.com/tools/explorer\n>  ")
 	user = 'me'
@@ -485,7 +493,7 @@ def build_resource(properties):
 		else:
         # For example, the property is "snippet.description", and the resource
         # already has a "snippet" object.
-		ref = ref[key]
+			ref = ref[key]
 	return resource
 
 # Remove keyword arguments that are not set
@@ -499,29 +507,30 @@ def remove_empty_kwargs(**kwargs):
 
 def videos_list_most_popular(client, **kwargs):
   # See full sample for function
-  kwargs = remove_empty_kwargs(**kwargs)
 
-  response = client.videos().list(
-    **kwargs
-  ).execute()
+	kwargs = remove_empty_kwargs(**kwargs)
+
+	response = client.videos().list(
+	**kwargs
+	).execute()
 
 
 
-  for res in response.get('items', []):
+	for res in response.get('items', []):
   #  print(res['id'])
    # print(res['snippet']['publishedAt'] +' ' +res['snippet']['channelTitle'])
   #  print(res['statistics']['viewCount'] + ' ' + res['statistics']['likeCount'])
 
-    my_data = (dateparser.parse(res['snippet']['publishedAt']))
-    time_data= my_data.strftime('%H:%M:%S')
+		my_data = (dateparser.parse(res['snippet']['publishedAt']))
+		time_data= my_data.strftime('%H:%M:%S')
       # print(time_data)
       #new_date= (datetime.strptime(time_data, "%H:%M:%S"))
-    tup = res['id'], res['snippet']['channelTitle'], res['statistics']['viewCount'],my_data.strftime("%I:%M:%S %p"),calendar.day_name[my_data.weekday()]
-    cur.execute('INSERT INTO youtube (id, chanTitle, viewCount, time_posted, day) VALUES (?, ?, ?, ?, ?)',  tup, )
+		tup = res['id'], res['snippet']['channelTitle'], res['statistics']['viewCount'],my_data.strftime("%I:%M:%S %p"),calendar.day_name[my_data.weekday()]
+		cur.execute('INSERT INTO youtube (id, chanTitle, viewCount, time_posted, day) VALUES (?, ?, ?, ?, ?)',  tup, )
 
   #return print_response(response)
 
-def get_youtube()
+def get_youtube():
 	CLIENT_SECRETS_FILE = "client_secret.json"
 
 
@@ -543,22 +552,59 @@ def get_youtube()
 		regionCode='CA',
 		videoCategoryId='')
 
+def get_yelp():
+	app_id = 'HLFMMIEGVil6OfM8RfgS5Q'
+	api_key = 'inCVmJm19AV8DNjDDaozhCMeQ9p7-CHlLVUbpvZIIfk3nUcNL_FoEa_awqToRZ1474JDl6XGfQpC40MTEhQ3SFwpog_NxPEj6z_TWYvF0k_IitUUTQT0_IHeFv4tWnYx'
+	url = "https://api.yelp.com/v3/businesses/search"
+	headers = {'Authorization': '	Bearer %s' % api_key}
+	uniqlo = list()
+	offset = 0
+
+	while offset < 100:
+		param = {'location': 'USA',
+				 'term': 'Uniqlo',
+				 'sort_by': 'best_match',
+				 'limit': 50,
+				 'offset': offset
+
+		}
+	print(requests.get(url=url,params=param, headers=headers))
+	search = requests.get(url=url,params=param, headers=headers)
+	print('here')
+	try:
+
+		search = search.json()
+	except:
+		print('didnt work')
+		pass
+		
+	offset +=50
+	for i in search['businesses']:
+		if i['name'] == "Uniqlo":
+			uniqlo[i['location']['city']].append(i['name'])
+		else:
+			break
+	print(uniqlo)
+
+
 #CHECK ALL CACHES THEY DONT REALLY WORK!!!!!!!!!!
 #def what(url,headers):
 if __name__ == '__main__':
-	get_user_insta()
+	#get_user_insta()
 
-	get_posts()
-	faceb = get_user_fb()
-	retrieve_data()
+	#get_posts()
+	#faceb = get_user_fb()
+	#retrieve_data()
 	#get_gmail()
-	GetMessage()
-	get_youtube()
+	#GetMessage()
+	#get_youtube()
+	get_yelp()
 #get_gmail()
 #insert_user_fb()
 #d = json.loads(open('my_posts.json'))
 	conn.commit()
 	cur.close()
+
 
 #Github
 
