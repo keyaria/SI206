@@ -1,9 +1,11 @@
-# Sample Python code for user authorization
-
 import os
 
 import google.oauth2.credentials
-
+import sqlite3
+import google_auth_oauthlib.flow
+from datetime import datetime
+import dateutil.parser as dateparser
+import calendar
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -18,27 +20,111 @@ CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
+conn = sqlite3.connect('Final_Project.sqlite')
+cur = conn.cursor()
+cur.execute('DROP TABLE IF EXISTS youtube')
+cur.execute('CREATE TABLE youtube (id TEXT NOT NULL, chanTitle TEXT, viewCount INTEGER, time_posted DATETIME, day DATETIME)')
 
 def get_authenticated_service():
   flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
   credentials = flow.run_console()
   return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
-def channels_list_by_username(service, **kwargs):
-  results = service.channels().list(
+def print_response(response):
+  print(response)
+
+# Build a resource based on a list of properties given as key-value pairs.
+# Leave properties with empty values out of the inserted resource.
+def build_resource(properties):
+  resource = {}
+  for p in properties:
+    # Given a key like "snippet.title", split into "snippet" and "title", where
+    # "snippet" will be an object and "title" will be a property in that object.
+    prop_array = p.split('.')
+    ref = resource
+    for pa in range(0, len(prop_array)):
+      is_array = False
+      key = prop_array[pa]
+
+      # For properties that have array values, convert a name like
+      # "snippet.tags[]" to snippet.tags, and set a flag to handle
+      # the value as an array.
+      if key[-2:] == '[]':
+        key = key[0:len(key)-2:]
+        is_array = True
+
+      if pa == (len(prop_array) - 1):
+        # Leave properties without values out of inserted resource.
+        if properties[p]:
+          if is_array:
+            ref[key] = properties[p].split(',')
+          else:
+            ref[key] = properties[p]
+      elif key not in ref:
+        # For example, the property is "snippet.title", but the resource does
+        # not yet have a "snippet" object. Create the snippet object here.
+        # Setting "ref = ref[key]" means that in the next time through the
+        # "for pa in range ..." loop, we will be setting a property in the
+        # resource's "snippet" object.
+        ref[key] = {}
+        ref = ref[key]
+      else:
+        # For example, the property is "snippet.description", and the resource
+        # already has a "snippet" object.
+        ref = ref[key]
+  return resource
+
+# Remove keyword arguments that are not set
+def remove_empty_kwargs(**kwargs):
+  good_kwargs = {}
+  if kwargs is not None:
+    for key, value in kwargs.items():
+      if value:
+        good_kwargs[key] = value
+  return good_kwargs
+
+def videos_list_most_popular(client, **kwargs):
+  # See full sample for function
+  kwargs = remove_empty_kwargs(**kwargs)
+
+  response = client.videos().list(
     **kwargs
   ).execute()
-  
-  print('This channel\'s ID is %s. Its title is %s, and it has %s views.' %
-       (results['items'][0]['id'],
-        results['items'][0]['snippet']['title'],
-        results['items'][0]['statistics']['viewCount']))
+
+
+
+  for res in response.get('items', []):
+  #  print(res['id'])
+   # print(res['snippet']['publishedAt'] +' ' +res['snippet']['channelTitle'])
+  #  print(res['statistics']['viewCount'] + ' ' + res['statistics']['likeCount'])
+
+    my_data = (dateparser.parse(res['snippet']['publishedAt']))
+    time_data= my_data.strftime('%H:%M:%S')
+      # print(time_data)
+      #new_date= (datetime.strptime(time_data, "%H:%M:%S"))
+    tup = res['id'], res['snippet']['channelTitle'], res['statistics']['viewCount'],my_data.strftime("%I:%M:%S %p"),calendar.day_name[my_data.weekday()]
+    cur.execute('INSERT INTO youtube (id, chanTitle, viewCount, time_posted, day) VALUES (?, ?, ?, ?, ?)',  tup, )
+
+  #return print_response(response)
+
 
 if __name__ == '__main__':
   # When running locally, disable OAuthlib's HTTPs verification. When
   # running in production *do not* leave this option enabled.
   os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-  service = get_authenticated_service()
-  channels_list_by_username(service,
-      part='snippet,contentDetails,statistics',
-      forUsername='GoogleDevelopers')
+  client = get_authenticated_service()
+  
+  videos_list_most_popular(client,
+    part='snippet,contentDetails,statistics',
+    chart='mostPopular',
+    maxResults=50,
+    regionCode='US',
+    videoCategoryId='')
+  videos_list_most_popular(client,
+    part='snippet,contentDetails,statistics',
+    chart='mostPopular',
+    maxResults=50,
+    regionCode='CA',
+    videoCategoryId='')
+  conn.commit()
+  cur.close()

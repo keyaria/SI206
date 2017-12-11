@@ -66,6 +66,7 @@ def get_credentials():
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
+    
 def GetMessage():
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
