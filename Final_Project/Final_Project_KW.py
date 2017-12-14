@@ -12,7 +12,8 @@ import requests
 import json
 import sqlite3
 import facebook
-
+import time
+#from time import mktime
 import httplib2
 import os
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -29,9 +30,6 @@ try:
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 except ImportError:
     flags = None
-#access_token = "EAACEdEose0cBABP8nJHJQZCGUT5GLTtKz0T1ZAOZBS1VVPVkI8sfFZBHBpsRqbn7LeBrxUB13EBZAYwkUjwWbEah1Kt085RZAWWOexVVKBpBo14iZA12UH5SjWifZCVYtAQGcoyqzHyZCbe3lj4lo6Q87t0iAYtG8F0m5DtPtjPiSZBd2WqvIaqP84FWGnOE9mbyaUIFF3ldHlDwZDZD"
-#if access_token is None:
-#	access_token = input("\nCopy and paste token from https://developers.facebook.com/tools/explorer\n>  ")
 
 #Cache setup
 CLIENT_SECRETS_FILE = "client_secret.json"
@@ -48,14 +46,41 @@ cur.execute('DROP TABLE IF EXISTS fb')
 cur.execute('DROP TABLE IF EXISTS insta')
 cur.execute('DROP TABLE IF EXISTS gmail')
 cur.execute('DROP TABLE IF EXISTS youtube')
+cur.execute('DROP TABLE IF EXISTS yelp')
 
 cur.execute('CREATE TABLE fb (post_id TEXT NOT NULL PRIMARY KEY, num_likes INTEGER, time_posted DATETIME, day DATETIME)')
 cur.execute('CREATE TABLE insta (post_id TEXT NOT NULL PRIMARY KEY, num_likes INTEGER, time_posted DATETIME, day DATETIME)')
 cur.execute('CREATE TABLE gmail (post_id TEXT NOT NULL PRIMARY KEY, sender TEXT, time_recieved DATETIME)')
 cur.execute('CREATE TABLE youtube (id TEXT NOT NULL, chanTitle TEXT, viewCount INTEGER, time_posted DATETIME, day DATETIME)')
+cur.execute('CREATE TABLE yelp (id TEXT NOT NULL, lon INT, lan INT)')
+
+
+#def time_retr(time):
+
+	#Morning times
+#	morS = datetime.time(6, 0, 1)
+#	morE = datetime.time(11, 59, 0)
+
+	#afternoon times
+#	aftS = datetime.time(12, 0, 1)
+#	aftE = datetime.time(17, 59, 0)
+
+	#night times
+#	nighS = datetime.time(18, 0, 1)
+#	nighE = datetime.time(23, 59, 0)
+
+	#early morning times
+#	EmorS = datetime.time(0, 0, 1)
+#	EmorE = datetime.time(5, 59, 0)
+
+#	if (time > morS & time < morE) :
+#		return("6:00am - 12:00pm")
+#	return("not done")
 
 #insta
 BASE_URL = 'https://api.instagram.com/v1/'
+
+#EFFECTS: Gathering the Insta information into a CACHE 
 def get_user_insta():	
 	cur = conn.cursor()
 	access_token = "189197666.3e5b08b.88c1b4c86c4940a086d79eab5ebed29d"
@@ -92,10 +117,6 @@ def get_user_insta():
 		f.write(json.dumps(CACHE_DICTION))
 		f.close()
 
-	#my_usr = api.user('189197666')
-
-
-
 	
 		if user_info['meta']['code'] == 200:
 		
@@ -108,6 +129,7 @@ def get_user_insta():
 			print('Status code other than 200 recieved')
 			exit()
 
+#EFFECTS: Grabbing the URLs and putting in the database 
 def get_posts():
 
 	access_token = "189197666.3e5b08b.88c1b4c86c4940a086d79eab5ebed29d"
@@ -125,6 +147,8 @@ def get_posts():
 	
 	print(recent_post['data'][1]['likes']['count'])
 	i = 0
+
+	#Putting the infromation into the database
 	while i < 20:
 		
 		try:
@@ -132,63 +156,43 @@ def get_posts():
 			count = recent_post['data'][i]['likes']['count']
 			time_create = recent_post['data'][i]['created_time']
 			conv_time = datetime.utcfromtimestamp(int(time_create))
-			#conv_time = datetime.strptime(conv_time, "%H:%M:%S")
-			#new_date= (conv_time.strptime(conv_time, "%H:%M:%S"))
-			#conv_time = datetime(conv_time)
-			ct = conv_time.strftime('%I:%M:%S %p')
-			#print(conv_time)
-			#print(ct)
-			theday = calendar.day_name[conv_time.weekday()]
-			#print(calendar.day_name[conv_time.weekday()])
 
-			#print(recent_post['data'][0]['created_time'])
-			#print(dateparser.parse(recent_post['data'][0]['created_time'])	)
-			#print(recent_post['data'][i]['created_time'])
+			#Converting the time stamp
+			ct = conv_time.strftime('%H:%M:%S')
+
+			theday = calendar.day_name[conv_time.weekday()]
+
 			i += 1
-			cur.execute('INSERT INTO insta (post_id, num_likes, time_posted, day) VALUES (?, ?, ?, ?)',  (post_id, count, conv_time, theday), )	
+			#time_period = time_retr(ct)
+			#print(time_period)
+			cur.execute('INSERT INTO insta (post_id, num_likes, time_posted, day) VALUES (?, ?, ?, ?)',  (post_id, count, ct, theday), )	
+
 
 		except KeyError:
 			break
+
 	request1_url = (BASE_URL + 'media/%s/likes?access_token=%s') %(post_id, access_token)
-	#print('like url %s' %(request1_url))
-	#likes = requests.get(request1_url).json()
-	#print(likes)
-	#print('number of likes' + likes)
-	# print('the post' + recent_post['data'][0]['id'])
 
 
-	#recent_media, next_ = api.user_recent_media(user_id="189197666", count=10)
-	#for media in recent_media:
-   	#	print(media.caption.text)
-	#api.user_media_feed()
-	#recent_media, next_ = api.user_recent_media(my_usr, count)
-	##print ('User id is', my_usr.username)
-	#print(my_usr.media)
 
-#Need to add Facebook
-
+#EFFECTS: Gathering the Facebook results and putting it in the database 
 def insert_user_fb():
-	access_token = "EAACEdEose0cBACL4RZBgLVr277vZBz4mbPL7pC2EfWN6JrKAYdtSdfYD4qhTl07s9ITAa4gY6rQ6sItou6H4z6Cv9pltMYhlQIIblBFpuZBRsC5CalJwUvZCZCUewE5gBBewIk1iDtCyeuvPTGI8k5gfM3XV0btbXbNPqoX1ZCyZAb6sRE6STwsW5hfVb8eSNZCtvHPFXfRpyQZDZD"
+	access_token = "EAADotjbU44IBALC0DG78VtrdfJZBdRn6O7UrC0k2zfRiljj5x2gIdwqOZA6H0e7XPOoJAILqZAbzhfMslBOZBDZALe4LARurVgHc8LLmVzUgVaAFNosUwIKSwTkC9PY4O6WgfmJ5znZBWZArQg9wXrMNr5Qq3GCSkoZD"
 
 	cur = conn.cursor()
 
 	
-		#access_token = input("EAACEdEose0cBADZC65ZA2AchHZBulPTWcZB1bmZAOCq2F8yZAnz3XIPSvePuM86yDpkpqD9ntLma1lGV129depZAZBgRxQXqVDYjqswZBO1qNu7RC4scLMCZBGPF115OxGJfYZAFDz5nyp1hOtBud3BQs4MCeWAtovjYLGAQokxbqR7UwD0LO13Ygu01LZBcareHZAJAZD")
 	graph = facebook.GraphAPI(access_token)
 	fb_results = graph.get_connections('me', 'posts')
-	#profile = graph.get_object('me', fields = 'name,location')
-	#print(json.dumps(profile, indent = 4))
+
 	query_string = 'posts?limit={0}'
-#	posts = graph.get_connections('me', 'posts')
-	#fdffddffad
+
 	offset = 0
 	lst = list()
 	
-	#data = json.load(open('Final_Project_cache.json'))
-	#print(json.dumps(data, indent=4))
-	#print(fb_results)
+
 	while offset < 100:
-		#print(fb_results['data'])
+
 		try:
 		#	print(fb_results)
 			for post in fb_results['data']:
@@ -197,30 +201,23 @@ def insert_user_fb():
 				likes = graph.get_connections(post['id'], connection_name='likes')
 				for like in likes['data']:
 					count += 1
-				#print(post)
-				#tup = post['id'],count, count, post['created_time']
+
 				tup6 = post['id']
 				cur.execute('SELECT * FROM fb where post_id = ?', (tup6,))
-				#datetime(*strptime(s, "%Y-%m-%dT%H:%M:%S")[0:6])
+
 
 				my_data = (dateparser.parse(post['created_time']))
 				time_data= my_data.strftime('%H:%M:%S')
 				#print(time_data)
 				new_date= (datetime.strptime(time_data, "%H:%M:%S"))
-
-				#print(new_date.strftime("%I:%M:%S %p"))
-				#print(calendar.day_name[my_data.weekday()])
-		 		#conn.commit()
-		 		#Trying to see if it is unique is not dont do anything
+				
 				try:
-				#	print('Made it here')
 					acct = cur.fetchone()[0]
 
 				except:
-		 			#print("User Exists")
+
 					cur.execute('INSERT INTO fb (post_id, num_likes, time_posted, day) VALUES (?, ?, ?, ?)',  (post['id'], count, my_data.strftime("%I:%M:%S %p"), calendar.day_name[my_data.weekday()]), )	
 				
-				#cur.execute('INSERT INTO fb (post_id, num_likes, time_posted) VALUES (?, ?, ?)',  (post['id'], count, post['created_time']), )	
 			offset += 19
 					
 					
@@ -231,6 +228,8 @@ def insert_user_fb():
         # loop and end the script.
 			break
 
+#EFFECTS: Gathering the information into a CACHE
+#RETURN: All the results gathered
 def get_user_fb():
 	CACHE_FNAME = "Final_Project_cache.json"
 
@@ -244,7 +243,7 @@ def get_user_fb():
 	except:
 		CACHE_DICTION = {}
 
-	access_token = "EAACEdEose0cBACL4RZBgLVr277vZBz4mbPL7pC2EfWN6JrKAYdtSdfYD4qhTl07s9ITAa4gY6rQ6sItou6H4z6Cv9pltMYhlQIIblBFpuZBRsC5CalJwUvZCZCUewE5gBBewIk1iDtCyeuvPTGI8k5gfM3XV0btbXbNPqoX1ZCyZAb6sRE6STwsW5hfVb8eSNZCtvHPFXfRpyQZDZD"
+	access_token = "EAADotjbU44IBALC0DG78VtrdfJZBdRn6O7UrC0k2zfRiljj5x2gIdwqOZA6H0e7XPOoJAILqZAbzhfMslBOZBDZALe4LARurVgHc8LLmVzUgVaAFNosUwIKSwTkC9PY4O6WgfmJ5znZBWZArQg9wXrMNr5Qq3GCSkoZD"
 	if access_token is None:
 		access_token = input("\nCopy and paste token from https://developers.facebook.com/tools/explorer\n>  ")
 	user = 'me'
@@ -258,37 +257,20 @@ def get_user_fb():
 		count = 0
 		offset = 0
 		lr = dict()
+
+		#Dealing with pagination 
 		while offset < 100:
 			try:
 
-			#count = count + len (likes['data'])
-        # Perform some action on each post in the collection we receive from
-        # Facebook.
 				with open('Final_Project_cache.json', 'a' ) as f:
 
-					#lst.append(count)
+					
 					for post in fb_results['data']:
 
 						#r = json.dumps(post)
 						CACHE_DICTION[user] = post
 						f.write(json.dumps(CACHE_DICTION) + "\n")
 						
-
-					#	lr = json.loads(r)
-						#print(count)
-						#tup = ps['id'],lr['story'],count, lr['created_time']
-						#print(tup)
-						#tup2 = lr['id'],lr['story'],count, lr['created_time']
-						#print(tup2)
-						#print(lr['id'])
-					#	type(lr)
-						#print(post["messages"])
-						#print(lr)
-				#f.close()
-					#print(lst)	
-				
-				#print(tup)
-				#print(lr)
 			#	tup = lr		
 				offset += 19
 					
@@ -302,9 +284,13 @@ def get_user_fb():
 		f.close()
 	insert_user_fb()
 	return fb_results
+
+#EFFECTS: Retrieves the data from the different API so they can be outputted on screen
 def retrieve_data():
 	from operator import itemgetter, attrgetter
 	cur = conn.cursor()
+
+	#Faceboo Output
 	cur.execute('SELECT day FROM fb')
 	counts = dict()
 	lis = list()
@@ -314,10 +300,25 @@ def retrieve_data():
 	for day in lis:
 		counts[day] = counts.get(day, 0) + 1
 	sort_ver = sorted(counts.items(), key=itemgetter(1), reverse = True)
-	print('Days most active')
+	print('Days most active on Facebook')
 	print(sort_ver)
+	cur.execute('SELECT day FROM Insta')
+	counts = dict()
+	lis = list()
+	for row in cur:
+		lis.append(str(row))
 	
+	#Instagram Output
+	for day in lis:
+		counts[day] = counts.get(day, 0) + 1
+	sort_ver = sorted(counts.items(), key=itemgetter(1), reverse = True)
+	print('Days most active on Insta')
+	print(sort_ver)
 
+
+
+	
+#EFFECTS: Gathering the information into a CACHE for Gmail
 def get_gmail():
 	CACHE_FNAME = "Final_Project_gmail.json"
 
@@ -335,14 +336,12 @@ def get_gmail():
 
 	cur = conn.cursor()
 
-
-# If modifying these scopes, delete your previously saved credentials
-# at ~/.credentials/gmail-python-quickstart.json
 	SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 	CLIENT_SECRET_FILE = 'client_id.json'
 	APPLICATION_NAME = 'apitime'
 	#GetMessage()
 
+#Gathering the authentication for Youtube
 def get_credentials():
     """Gets valid user credentials from storage.
 
@@ -370,7 +369,8 @@ def get_credentials():
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
-    
+
+#EFFECTS: Putting the gmail information into the database   
 def GetMessage():
 	CACHE_FNAME = "Final_Project_gmail.json"
 
@@ -388,9 +388,7 @@ def GetMessage():
 
 	cur = conn.cursor()
 
-
-# If modifying these scopes, delete your previously saved credentials
-# at ~/.credentials/gmail-python-quickstart.json
+	#Putting the scope
 	SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
 	CLIENT_SECRET_FILE = 'client_id.json'
 	APPLICATION_NAME = 'apitime'
@@ -406,20 +404,8 @@ def GetMessage():
 	else:
 		print('getting data from internet')
   
-   # try:
-   #   message = service.users().messages().get(userId='me', id='16038100b2b13aa4').execute()
-   #   payload = message['payload'] 
-  #    header = payload['headers']
-   #   for item in header:
-    #    if item['name'] == 'Date':
-         # date = item['value']
-     # print('Message snippet: %s' % message['snippet'])
-      #print('Message Date: %s' % message['internalDate'])
-      #print(date)
-
       
-    #except errors.HttpError:
-    #  print ('An error occurred: %s' % error)
+	#Getting the individual results
 	with open('Final_Project_gmail.json', 'a' ) as f:
 		msgs = service.users().messages().list(userId='me', maxResults=100).execute()
 		for msg in msgs['messages']:
@@ -435,20 +421,16 @@ def GetMessage():
 					date = item['value']
 				if item['name'] == 'From':
 					sender = item['value']
+					#print(sender)
+
+
+
 
 			cur.execute('INSERT INTO gmail (post_id, sender, time_recieved) VALUES (?, ?, ?)',  (m_id,sender, date), )
-	f.close()
-      #print(m_id + '' + date + '' + sender)
 
+		f.close()
 
-	#from oauth2client.client import OAuth2WebServerFlow
-
-	#flow = OAuth2WebServerFlow(client_id='60246787954-01thr1e518mr3l7upgse73798inf4439.apps.googleusercontent.com',
-	#						client_secret='MdZH07Gp4atU8OVrE3Jed13h',
-	##						scope='https://www.googleapis.com/auth/gmail',
-	#						redirect_uri='https://google.com')
-	#auth_uri = flow.step1_get_authorize_url()
-#service = build('gmail', 'v4', developerKey=ya29.GlseBdlphjF3BDFns897kg5Wbzz2umVpQGru-v7VjK_png07kIOKH4JDPvb64ZBIjyYSmEikZD4I2Z9DkY-8NLffmpE_KaXXfpLYsFiQsm7rzKL8SOMzd7qMLdrD)
+#Youtube authentication
 def get_authenticated_service():
 	flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
 	credentials = flow.run_console()
@@ -456,21 +438,17 @@ def get_authenticated_service():
 
 
 # Build a resource based on a list of properties given as key-value pairs.
-# Leave properties with empty values out of the inserted resource.
 def build_resource(properties):
 	resource = {}
 	for p in properties:
-    # Given a key like "snippet.title", split into "snippet" and "title", where
-    # "snippet" will be an object and "title" will be a property in that object.
+
 		prop_array = p.split('.')
 		ref = resource
 	for pa in range(0, len(prop_array)):
 		is_array = False
 		key = prop_array[pa]
 
-      # For properties that have array values, convert a name like
-      # "snippet.tags[]" to snippet.tags, and set a flag to handle
-      # the value as an array.
+
 		if key[-2:] == '[]':
 			key = key[0:len(key)-2:]
 			is_array = True
@@ -483,16 +461,11 @@ def build_resource(properties):
 			else:
 				ref[key] = properties[p]
 		elif key not in ref:
-        # For example, the property is "snippet.title", but the resource does
-        # not yet have a "snippet" object. Create the snippet object here.
-        # Setting "ref = ref[key]" means that in the next time through the
-        # "for pa in range ..." loop, we will be setting a property in the
-        # resource's "snippet" object.
+
 			ref[key] = {}
 			ref = ref[key]
 		else:
-        # For example, the property is "snippet.description", and the resource
-        # already has a "snippet" object.
+
 			ref = ref[key]
 	return resource
 
@@ -505,8 +478,9 @@ def remove_empty_kwargs(**kwargs):
 				good_kwargs[key] = value
 	return good_kwargs
 
+##EFFECTS: Gathering the most popular videos
 def videos_list_most_popular(client, **kwargs):
-  # See full sample for function
+ 
 
 	kwargs = remove_empty_kwargs(**kwargs)
 
@@ -515,11 +489,8 @@ def videos_list_most_popular(client, **kwargs):
 	).execute()
 
 
-
 	for res in response.get('items', []):
-  #  print(res['id'])
-   # print(res['snippet']['publishedAt'] +' ' +res['snippet']['channelTitle'])
-  #  print(res['statistics']['viewCount'] + ' ' + res['statistics']['likeCount'])
+
 
 		my_data = (dateparser.parse(res['snippet']['publishedAt']))
 		time_data= my_data.strftime('%H:%M:%S')
@@ -530,6 +501,7 @@ def videos_list_most_popular(client, **kwargs):
 
   #return print_response(response)
 
+##EFFECTS: Calling and setting scopes for videos_list functions
 def get_youtube():
 	CLIENT_SECRETS_FILE = "client_secret.json"
 
@@ -552,52 +524,115 @@ def get_youtube():
 		regionCode='CA',
 		videoCategoryId='')
 
+#EFFECTS: Gathering the information into a CACHE, getting all the results and putting it in a database
 def get_yelp():
+	CACHE_FNAME = "Final_Project_yelp.json"
+
+	cur = conn.cursor()
 	app_id = 'HLFMMIEGVil6OfM8RfgS5Q'
 	api_key = 'inCVmJm19AV8DNjDDaozhCMeQ9p7-CHlLVUbpvZIIfk3nUcNL_FoEa_awqToRZ1474JDl6XGfQpC40MTEhQ3SFwpog_NxPEj6z_TWYvF0k_IitUUTQT0_IHeFv4tWnYx'
 	url = "https://api.yelp.com/v3/businesses/search"
-	headers = {'Authorization': '	Bearer %s' % api_key}
-	uniqlo = list()
-	offset = 0
-
-	while offset < 100:
-		param = {'location': 'USA',
-				 'term': 'Uniqlo',
-				 'sort_by': 'best_match',
-				 'limit': 50,
-				 'offset': offset
-
-		}
-	print(requests.get(url=url,params=param, headers=headers))
-	search = requests.get(url=url,params=param, headers=headers)
-	print('here')
+	headers = {'Authorization': 'Bearer %s' %api_key}
 	try:
+		cache_file = open(CACHE_FNAME, 'r')
+		cache_contents = cache_file.read()
 
-		search = search.json()
-	except:
-		print('didnt work')
-		pass
+		cache_file.close()
 		
-	offset +=50
-	for i in search['businesses']:
-		if i['name'] == "Uniqlo":
-			uniqlo[i['location']['city']].append(i['name'])
-		else:
-			break
-	print(uniqlo)
+		CACHE_DICTION = json.loads(cache_contents)
+
+	except:
+  		CACHE_DICTION = {}
+
+	user = 'McDonald'
+	#print(CACHE_DICTION)
+	if user in CACHE_DICTION:
+		print('using cached data')
+		search_US = CACHE_DICTION[user]
+		for i in search_US['businesses']:
+			if i['name'] == "McDonald's":
+					#print(i['name'])
+					#print(i['location'])
+				tup = i['id'],i['coordinates']['longitude'],i['coordinates']['latitude']
+
+				cur.execute('INSERT INTO yelp (id, lon, lan) VALUES (?, ?, ?)',  tup, )
+		
+	else:
+		print('getting data from internet')
 
 
-#CHECK ALL CACHES THEY DONT REALLY WORK!!!!!!!!!!
-#def what(url,headers):
+
+		offset = 0
+
+		#To deal with pagination
+		while offset < 100:
+			param = {'term': 'McDonald',
+					 'location': 'MI',
+					 'sort_by': 'best_match',
+					 'limit': 50,
+					 'offset': offset
+
+			}
+			param2 = {'term': 'McDonald',
+					 'location': 'OH',
+					 'sort_by': 'best_match',
+					 'limit': 6,
+					 #'offset': offset
+
+			}
+			search_US = requests.get(url=url,params=param, headers=headers)
+			search_OH = requests.get(url=url,params=param2, headers=headers)
+			#data = [search_US.json(), search_OH.json()]
+			#print(data)
+			CACHE_DICTION[user] = search_US.json()
+			
+
+			f = open(CACHE_FNAME, "w")
+			f.write(json.dumps(CACHE_DICTION) +"\n")
+			CACHE_DICTION[user] = search_OH.json()
+			f.write(json.dumps(CACHE_DICTION) )
+			f.close()
+
+			try:
+
+				search_US = search_US.json()
+				search_OH = search_OH.json()
+			except:
+				print('didnt work')
+				pass
+			
+			offset +=50
+		#print(search['businesses'])
+
+			for i in search_US['businesses']:
+				if i['name'] == "McDonald's":
+					#print(i['name'])
+					#print(i['location'])
+					tup = i['id'],i['coordinates']['longitude'],i['coordinates']['latitude']
+
+					cur.execute('INSERT INTO yelp (id, lon, lan) VALUES (?, ?, ?)',  tup, )
+			for i in search_OH['businesses']:
+				if i['name'] == "McDonald's":
+					#print(i['name'])
+
+					tup = i['id'],i['coordinates']['longitude'],i['coordinates']['latitude']
+
+					cur.execute('INSERT INTO yelp (id, lon, lan) VALUES (?, ?, ?)',  tup, )
+
+
+
+
+
 if __name__ == '__main__':
-	#get_user_insta()
+	get_user_insta()
 
-	#get_posts()
-	#faceb = get_user_fb()
-	#retrieve_data()
-	#get_gmail()
-	#GetMessage()
-	#get_youtube()
+	get_posts()
+	faceb = get_user_fb()
+	
+	get_gmail()
+	GetMessage()
+	retrieve_data()
+	get_youtube()
 	get_yelp()
 #get_gmail()
 #insert_user_fb()
@@ -606,10 +641,3 @@ if __name__ == '__main__':
 	cur.close()
 
 
-#Github
-
-#some type of google api
-
-#Youtube addin something
-
-#COmments
